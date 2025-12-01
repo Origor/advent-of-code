@@ -1,0 +1,32 @@
+Reasoning & Design Choices
+Here is a breakdown of why I approached the solution this way:
+
+1. Data Structures: 
+Board
+ Representation I chose to represent the board as a Vec<Vec<(u32, bool)>>.
+
+Why: This directly maps to the mental model of a physical Bingo board. Each cell has a number and a state (marked/unmarked).
+Alternative: I could have used a flat Vec<u32> of size 25 and used math (index / 5, index % 5) to find rows/cols. Or, I could have maintained "counters" for each row and column (e.g., rows_count: [u8; 5]) and incremented them when a number was marked.
+Decision: Since the board is tiny (5x5), the "naive" approach of iterating through rows and columns to check for a win is extremely fast. The "counter" optimization would add complexity (synchronizing the counters with the grid) without a meaningful performance gain for this input size.
+2. Parsing: split_whitespace vs Fixed Width
+
+Why: The input numbers are right-aligned (e.g.,  5 vs 10). split_whitespace() in Rust is fantastic because it automatically handles multiple spaces as a single delimiter.
+Alternative: I could have parsed by fixed character widths or regex, but that is brittle. If the input format changed slightly (e.g., single spaces), fixed width would break.
+3. Part 2 Strategy: HashSet vs Removing Boards This was probably the most important logic decision.
+
+The Challenge: In Part 2, you need to find the last winner. As you iterate through numbers, multiple boards might win on the same number.
+Why I used a HashSet: I kept a set of won_boards indices. When checking boards, I simply skipped those already in the set.
+Alternative (The Trap): A common mistake is to remove() boards from the vector as they win. This is dangerous because removing an item shifts the indices of all subsequent items, which causes havoc if you are iterating through that same vector by index. You end up skipping boards or panicking.
+Alternative (Flag): I could have added a won: bool field to the 
+Board
+ struct. This would have been cleaner than the HashSet in 
+main
+, but I wanted to keep the 
+Board
+ struct purely about the state of the grid, not the state of the game tournament.
+Thoughts on the Puzzle
+Difficulty: This is a classic "Simulation" puzzle. It doesn't require complex algorithms (like pathfinding or dynamic programming), but it demands meticulous implementation of the rules. The "hard" part is usually just parsing the input correctly and ensuring you don't accidentally count diagonals (which the rules explicitly excluded).
+
+The Twist: I liked the Part 2 twist. It flips the goal from "optimization" (winning fast) to "pessimization" (winning slow). It forces you to think about the state of all actors in the system, rather than stopping as soon as you find one success.
+
+Lore: The idea of playing Bingo with a Giant Squid to pass the time while your submarine is being crushed by ocean pressure is peak Advent of Code humor!
